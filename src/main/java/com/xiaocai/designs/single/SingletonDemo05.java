@@ -1,0 +1,75 @@
+package com.xiaocai.designs.single;
+
+import java.util.concurrent.*;
+
+/**
+ * @description: TODO 功能角色说明：
+ * TODO 描述： 单例模式 5 - 懒汉式 3  --- 线程不安全写法 -- synchronized 同步代码块
+ * @author: 张小菜
+ * @date: 2020/10/18 21:10
+ * @version: v1.0
+ */
+public class SingletonDemo05 {
+
+    //TODO 1、构造器私有化
+    private SingletonDemo05(){
+
+    }
+    //TODO 2、创建静态变量实例
+    private  static  SingletonDemo05 instance ;
+
+
+    //TODO 3、提供公有静态方法返回实例对象 ----  synchronized
+    public static  SingletonDemo05 getInstance(){
+
+        if(instance == null){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            synchronized(SingletonDemo05.class){
+
+                instance = new SingletonDemo05();
+            }
+        }
+        return instance ;
+    }
+
+
+
+    public static void main(String[] args) {
+        System.out.println("懒汉式3--synchronized 同步代码块，反而线程不安全----");
+        /*
+        SingletonDemo05 instance01 = SingletonDemo05.getInstance();
+        SingletonDemo05 instance02 = SingletonDemo05.getInstance();
+        System.out.println(instance01.equals(instance02));
+        System.out.println(instance01.hashCode());
+        System.out.println(instance01.hashCode());
+*/
+
+        Callable<SingletonDemo05> callable = () -> SingletonDemo05.getInstance();
+
+        ExecutorService service1 = Executors.newFixedThreadPool(2);
+
+        Future<SingletonDemo05> future1 = service1.submit(callable);
+        Future<SingletonDemo05> future2 = service1.submit(callable);
+
+        try {
+            SingletonDemo05 singletonDemo05_t1 = future1.get();
+            SingletonDemo05 singletonDemo05_t2 = future2.get();
+
+            System.out.println(singletonDemo05_t1.equals(singletonDemo05_t2));
+            System.out.println(singletonDemo05_t1.hashCode());
+            System.out.println(singletonDemo05_t2.hashCode());
+
+
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }finally {
+            service1.shutdown();
+        }
+    }
+}
